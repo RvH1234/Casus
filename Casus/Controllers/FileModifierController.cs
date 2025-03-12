@@ -1,5 +1,7 @@
-﻿using Casus.Services;
-
+﻿using Casus.Commands.ProcesTextFileMutations;
+using Casus.Extensions;
+using Casus.Services;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -12,11 +14,11 @@ namespace Casus.Controllers
     [ApiController]
     public class FileModifierController : ControllerBase
     {
-        private readonly IModifierService _modifierService;
+        private readonly IMediator _mediator;
 
-        public FileModifierController(IModifierService modifierService)
+        public FileModifierController(IMediator mediator)
         {
-            _modifierService = modifierService;
+            _mediator = mediator;
         }
 
         /// <summary>
@@ -29,19 +31,26 @@ namespace Casus.Controllers
         [HttpPut("/Modify")]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> ModifyFileAsync(IFormFile formFile)
         {
             if (formFile == null) { return BadRequest("A file is required"); }
-           
-            var fileStateService = FileStateContainerService.Create(formFile);
-            var result = await _modifierService.ModifyAsync(fileStateService);
+
+            var command = await Mapping.MapToCommandAsync(formFile);
+            var result = await _mediator.Send(command);
 
             if (result.Succeeded)
             {
-                return File(fileStateService.FileContent, fileStateService.ContentType, fileStateService.FileName);
+                return File(result.Value.FileContent, formFile.ContentType, result.Value.FileName);
             }
 
-            return BadRequest(result.ErrorMessage);
+            return Problem(result.ErrorMessage);
         }
+
+
+
+
+
+
     }
 }
