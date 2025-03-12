@@ -1,28 +1,31 @@
-﻿using MediatR;
+﻿using Casus.Results;
+using MediatR;
+using System.IO;
 using System.Text;
 
 
 namespace Casus.Commands.AddText
 {
     /// <summary>
-    /// Handles the <see cref="AddTextCommand"/> by prepending text to the file content.
+    /// Handles the <see cref="AddTextCommand"/> by appending text to the memorystream.
     /// </summary>
     public class AddTextCommandHandler : IRequestHandler<AddTextCommand>
     {
         /// <summary>
-        /// Processes the <see cref="AddTextCommand"/> and modifies the file content.
+        /// Processes the <see cref="AddTextCommand"/> and adds text to memorystream.
         /// </summary>
-        /// <param name="request">The command containing the file state and text to add.</param>
+        /// <param name="request">The <see cref="AddTextCommand"/> containing the memorystream and text to add.</param>
         /// <param name="cancellationToken"></param>
-        public Task Handle(AddTextCommand request, CancellationToken cancellationToken)
+        public async Task Handle(AddTextCommand request, CancellationToken cancellationToken)
         {
-            var textToAddBytes = Encoding.UTF8.GetBytes(request.TextToAdd + Environment.NewLine);
-            var updatedBytes = textToAddBytes.Concat(request.FileStateService.FileContent).ToArray();
-
-            request.FileStateService.FileContent = updatedBytes;
-            return Task.CompletedTask;
-
-        
+            var memStream = request.MemStream;
+            memStream.Seek(0, SeekOrigin.End);
+            using (var writer = new StreamWriter(memStream, Encoding.UTF8, leaveOpen: true))
+            {
+                await writer.WriteAsync(Environment.NewLine + request.TextToAdd);
+                await writer.FlushAsync();
+            }
+            memStream.Position = 0;
         }
     }
 }

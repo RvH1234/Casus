@@ -19,17 +19,14 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Title = "Casus API",
         Description = "An ASP.NET Core Web API for uploading and modifying a textfile",
-      
     });
 
     // using System.Reflection;
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-}
+    }
 
     );
-
-
 
 var app = builder.Build();
 

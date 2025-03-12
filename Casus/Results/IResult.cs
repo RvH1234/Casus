@@ -5,7 +5,14 @@
     /// </summary>
     public interface IResult
     {
-        string? ErrorMessage { get; set; }
-        bool Succeeded { get; set; }
+        string? ErrorMessage { get;  }
+        bool Succeeded { get;  }
+    }
+    /// <summary>
+    /// Contract for indicating a result of type T
+    /// </summary>
+    public interface IResult<out T> : IResult
+    { 
+        T Value { get;  }
     }
 }
